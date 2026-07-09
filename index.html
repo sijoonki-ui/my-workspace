@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>오늘의 운세</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Serif KR', serif;
+      background: radial-gradient(ellipse at top, #1a0533 0%, #0a0015 60%, #000008 100%);
+      min-height: 100vh;
+      color: #e8d5ff;
+      overflow-x: hidden;
+    }
+
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle var(--dur) ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: 0.1; transform: scale(0.8); }
+      to   { opacity: 0.9; transform: scale(1.2); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      text-align: center;
+    }
+
+    header { margin-bottom: 36px; }
+    header .subtitle {
+      font-size: 0.85rem;
+      letter-spacing: 0.3em;
+      color: #b09ad0;
+      margin-bottom: 10px;
+    }
+    header h1 {
+      font-size: clamp(2rem, 6vw, 3.2rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #f0c060, #d090ff, #80c8ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+    }
+    header .divider {
+      margin: 16px auto 0;
+      width: 80px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #9060d0, transparent);
+    }
+
+    .intro {
+      font-size: 0.95rem;
+      color: #c0a8e8;
+      margin-bottom: 32px;
+      line-height: 1.8;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 14px 38px;
+      border: none;
+      border-radius: 50px;
+      font-family: 'Noto Serif KR', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      letter-spacing: 0.05em;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #7030c0, #a050e0, #6020b0);
+      color: #fff;
+      box-shadow: 0 0 24px rgba(140, 60, 220, 0.55), 0 4px 16px rgba(0,0,0,0.4);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 0 40px rgba(160, 80, 240, 0.7), 0 6px 20px rgba(0,0,0,0.4);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #c0a0f0;
+      border: 1px solid #6040a0;
+      font-size: 0.9rem;
+      padding: 10px 28px;
+    }
+    .btn-secondary:hover {
+      background: rgba(100, 60, 160, 0.25);
+      border-color: #a070e0;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 36px 0;
+    }
+    @media (max-width: 560px) {
+      .card-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    }
+
+    .card-wrap { perspective: 900px; }
+    .card {
+      width: 100%;
+      aspect-ratio: 2/3;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.75s cubic-bezier(0.4, 0.2, 0.2, 1);
+    }
+    .card.selected { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 6px;
+    }
+
+    .card-back {
+      background: linear-gradient(145deg, #1e0840, #2a0f5a, #180630);
+      border: 1px solid #5030a0;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .card-back::before {
+      content: '';
+      position: absolute;
+      inset: 6px;
+      border: 1px solid rgba(180, 120, 255, 0.2);
+      border-radius: 8px;
+    }
+    .card-back .back-symbol { font-size: clamp(1.4rem, 4vw, 2rem); opacity: 0.6; }
+    .card-back .back-label {
+      font-size: 0.55rem;
+      letter-spacing: 0.2em;
+      color: #8060c0;
+      text-transform: uppercase;
+    }
+
+    .card-front {
+      transform: rotateY(180deg);
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 0 30px rgba(180, 100, 255, 0.35), 0 6px 24px rgba(0,0,0,0.5);
+    }
+    .card-front .card-icon {
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      filter: drop-shadow(0 0 12px rgba(255,220,100,0.7));
+    }
+    .card-front .card-name {
+      font-size: clamp(0.65rem, 1.8vw, 0.85rem);
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: 0.05em;
+    }
+
+    .card-front.theme-0 { background: linear-gradient(145deg, #0d1f4a, #1a3070, #0a1535); }
+    .card-front.theme-1 { background: linear-gradient(145deg, #1a1050, #2d1a7a, #100c3a); }
+    .card-front.theme-2 { background: linear-gradient(145deg, #3a1500, #6a2800, #2a1000); }
+    .card-front.theme-3 { background: linear-gradient(145deg, #0d2a2a, #154040, #081a1a); }
+    .card-front.theme-4 { background: linear-gradient(145deg, #2a0a3a, #4a1060, #1a0626); }
+    .card-front.theme-5 { background: linear-gradient(145deg, #001a30, #003060, #000f1e); }
+    .card-front.theme-6 { background: linear-gradient(145deg, #3a001a, #600030, #200010); }
+    .card-front.theme-7 { background: linear-gradient(145deg, #0f2a0f, #1a4a1a, #081808); }
+
+    .result-panel {
+      display: none;
+      margin-top: 10px;
+      padding: 32px 28px;
+      background: linear-gradient(145deg, rgba(30, 8, 64, 0.85), rgba(15, 4, 36, 0.9));
+      border: 1px solid rgba(160, 80, 240, 0.3);
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 40px rgba(120, 40, 200, 0.2), 0 8px 32px rgba(0,0,0,0.4);
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .result-card-name {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #f0c060, #e090ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 4px;
+    }
+    .result-divider {
+      width: 60px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #9060d0, transparent);
+      margin: 12px auto;
+    }
+    .result-message {
+      font-size: 1.05rem;
+      line-height: 1.9;
+      color: #dcc8ff;
+      margin-bottom: 24px;
+    }
+
+    .result-meta {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      background: rgba(100, 50, 160, 0.2);
+      border: 1px solid rgba(160, 80, 240, 0.2);
+      border-radius: 12px;
+      padding: 12px 18px;
+      min-width: 110px;
+    }
+    .meta-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: #9070c0;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .meta-value {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #f0d080;
+    }
+
+    .result-advice {
+      margin-top: 20px;
+      font-size: 0.88rem;
+      color: #b090d8;
+      font-style: italic;
+      line-height: 1.7;
+      padding: 14px 18px;
+      border-left: 2px solid rgba(160, 80, 240, 0.4);
+      text-align: left;
+    }
+
+    .actions { margin-top: 24px; }
+
+    .card-wrap.dimmed .card-back { opacity: 0.3; }
+    .card-wrap.dimmed .card-front { opacity: 0.5; }
+  </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="container">
+  <header>
+    <p class="subtitle">✦ 신비의 타로 ✦</p>
+    <h1>오늘의 운세</h1>
+    <div class="divider"></div>
+  </header>
+
+  <p class="intro">
+    마음을 고요히 하고, 당신의 직감을 따르세요.<br>
+    버튼을 눌러 오늘의 운명을 마주하세요.
+  </p>
+
+  <button class="btn btn-primary" id="drawBtn" onclick="drawCard()">✦ 카드 뽑기 ✦</button>
+
+  <div class="card-grid" id="cardGrid"></div>
+
+  <div class="result-panel" id="resultPanel">
+    <div class="result-card-name" id="resultName"></div>
+    <div class="result-divider"></div>
+    <p class="result-message" id="resultMessage"></p>
+    <div class="result-meta">
+      <div class="meta-item">
+        <div class="meta-label">행운의 색</div>
+        <div class="meta-value" id="metaColor"></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">행운의 수</div>
+        <div class="meta-value" id="metaNumber"></div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">오늘의 에너지</div>
+        <div class="meta-value" id="metaEnergy"></div>
+      </div>
+    </div>
+    <div class="result-advice" id="resultAdvice"></div>
+    <div class="actions">
+      <button class="btn btn-secondary" onclick="reset()">↺ 다시 뽑기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CARDS = [
+    {
+      name: "🌙 달",
+      icon: "🌙",
+      label: "달",
+      message: "직관을 믿으세요. 지금 눈에 보이지 않는 것들이 곧 모습을 드러낼 것입니다. 감추어진 진실과 내면의 목소리에 귀를 기울이세요.",
+      color: "은빛 회색",
+      number: "2",
+      energy: "신비",
+      advice: "\"달이 차고 기울 듯, 지금의 혼란도 반드시 밝아질 때가 옵니다. 서두르지 마세요.\""
+    },
+    {
+      name: "⭐ 별",
+      icon: "⭐",
+      label: "별",
+      message: "희망의 빛이 당신을 이끌고 있습니다. 새로운 시작을 맞이할 준비를 하세요. 소망이 현실이 될 가능성이 높은 날입니다.",
+      color: "하늘색",
+      number: "7",
+      energy: "희망",
+      advice: "\"별을 바라보며 소원을 빌었던 어린 날처럼, 오늘 하루 순수한 마음으로 임하세요.\""
+    },
+    {
+      name: "☀️ 태양",
+      icon: "☀️",
+      label: "태양",
+      message: "에너지가 넘치는 하루가 될 것입니다. 자신감을 가지고 앞으로 나아가세요. 당신이 빛날 차례입니다.",
+      color: "황금색",
+      number: "1",
+      energy: "활력",
+      advice: "\"태양은 구름 뒤에도 항상 존재합니다. 당신의 빛도 마찬가지예요. 두려움 없이 빛나세요.\""
+    },
+    {
+      name: "🔮 수정구",
+      icon: "🔮",
+      label: "수정구",
+      message: "예상치 못한 인연이나 기회가 기다리고 있습니다. 열린 마음으로 주변을 바라보세요. 우주가 신호를 보내고 있습니다.",
+      color: "보라색",
+      number: "9",
+      energy: "신통력",
+      advice: "\"보이는 것이 전부가 아닙니다. 오늘은 특히 첫 인상보다 본질을 꿰뚫어 보려 노력하세요.\""
+    },
+    {
+      name: "⚡ 번개",
+      icon: "⚡",
+      label: "번개",
+      message: "커다란 변화가 찾아오고 있습니다. 두려워하지 마세요. 번개는 파괴이기도 하지만 동시에 새로운 에너지의 탄생입니다.",
+      color: "전기 노랑",
+      number: "16",
+      energy: "변혁",
+      advice: "\"오래된 구조가 무너져야 새것이 세워집니다. 흔들림을 받아들이면 더 강해질 수 있습니다.\""
+    },
+    {
+      name: "🌊 파도",
+      icon: "🌊",
+      label: "파도",
+      message: "흐름에 몸을 맡기세요. 억지로 저항하지 말고 자연스러운 움직임을 따르세요. 부드러운 것이 강한 것을 이깁니다.",
+      color: "청록색",
+      number: "4",
+      energy: "유연함",
+      advice: "\"물은 어떤 그릇에도 담깁니다. 오늘 하루, 완고함을 내려놓고 유연하게 대응해보세요.\""
+    },
+    {
+      name: "🌹 장미",
+      icon: "🌹",
+      label: "장미",
+      message: "사랑과 풍요로움이 가득한 날입니다. 소중한 사람에게 마음을 전하세요. 아름다운 것들이 당신 곁에 머물 것입니다.",
+      color: "장미 핑크",
+      number: "6",
+      energy: "사랑",
+      advice: "\"장미에 가시가 있듯 진정한 사랑은 때로 아픕니다. 하지만 그 향기는 어떤 것보다 깊습니다.\""
+    },
+    {
+      name: "🦋 나비",
+      icon: "🦋",
+      label: "나비",
+      message: "변신의 시간이 왔습니다. 과거의 자신을 놓아주고 새로운 당신으로 날아오르세요. 성장은 언제나 변화를 수반합니다.",
+      color: "오렌지",
+      number: "3",
+      energy: "변신",
+      advice: "\"번데기 속 어둠이 없었다면 나비의 날개도 없습니다. 지금의 고통이 내일의 아름다움입니다.\""
+    }
+  ];
+
+  let drawn = false;
+
+  (function createStars() {
+    const container = document.getElementById('stars');
+    for (let i = 0; i < 120; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2.5 + 0.5;
+      s.style.cssText = `
+        width:${size}px; height:${size}px;
+        left:${Math.random()*100}%;
+        top:${Math.random()*100}%;
+        --dur:${(Math.random()*3+2).toFixed(1)}s;
+        animation-delay:${(Math.random()*4).toFixed(1)}s;
+      `;
+      container.appendChild(s);
+    }
+  })();
+
+  (function renderGrid() {
+    const grid = document.getElementById('cardGrid');
+    CARDS.forEach(function(card, i) {
+      const wrap = document.createElement('div');
+      wrap.className = 'card-wrap';
+      wrap.id = 'wrap-' + i;
+      wrap.innerHTML = `
+        <div class="card" id="card-${i}">
+          <div class="card-face card-back">
+            <span class="back-symbol">✦</span>
+            <span class="back-label">TAROT</span>
+          </div>
+          <div class="card-face card-front theme-${i}">
+            <span class="card-icon">${card.icon}</span>
+            <span class="card-name">${card.label}</span>
+          </div>
+        </div>`;
+      grid.appendChild(wrap);
+    });
+  })();
+
+  function drawCard() {
+    if (drawn) return;
+    drawn = true;
+
+    const btn = document.getElementById('drawBtn');
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
+    btn.style.transform = 'scale(0.98)';
+
+    const idx = Math.floor(Math.random() * CARDS.length);
+
+    document.getElementById('card-' + idx).classList.add('selected');
+
+    CARDS.forEach(function(_, i) {
+      if (i !== idx) document.getElementById('wrap-' + i).classList.add('dimmed');
+    });
+
+    setTimeout(function() { showResult(CARDS[idx]); }, 820);
+  }
+
+  function showResult(card) {
+    document.getElementById('resultName').textContent = card.name;
+    document.getElementById('resultMessage').textContent = card.message;
+    document.getElementById('metaColor').textContent = card.color;
+    document.getElementById('metaNumber').textContent = card.number;
+    document.getElementById('metaEnergy').textContent = card.energy;
+    document.getElementById('resultAdvice').textContent = card.advice;
+    document.getElementById('resultPanel').style.display = 'block';
+  }
+
+  function reset() {
+    drawn = false;
+    CARDS.forEach(function(_, i) {
+      document.getElementById('card-' + i).classList.remove('selected');
+      document.getElementById('wrap-' + i).classList.remove('dimmed');
+    });
+    document.getElementById('resultPanel').style.display = 'none';
+    const btn = document.getElementById('drawBtn');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.transform = '';
+  }
+</script>
+</body>
+</html>
